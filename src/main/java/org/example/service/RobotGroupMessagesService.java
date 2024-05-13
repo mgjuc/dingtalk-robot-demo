@@ -57,7 +57,7 @@ public class RobotGroupMessagesService {
         orgGroupSendRequest.setOpenConversationId(openConversationId);
 
         JSONObject msgParam = new JSONObject();
-        msgParam.put("content", "java-getting-start say : " + text);
+        msgParam.put("content", text);
         orgGroupSendRequest.setMsgParam(msgParam.toJSONString());
 
         try {
