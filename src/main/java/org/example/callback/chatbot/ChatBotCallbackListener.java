@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson2.JSON;
 import com.dingtalk.open.app.api.models.bot.ChatbotMessage;
 import com.dingtalk.open.app.api.models.bot.MessageContent;
+import org.example.Entity.ToDoItem;
 import org.example.service.MessageHandler;
 import org.example.service.RobotGroupMessagesService;
 import com.dingtalk.open.app.api.callback.OpenDingTalkCallbackListener;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 /**
  * 机器人消息回调
@@ -45,9 +47,9 @@ public class ChatBotCallbackListener implements OpenDingTalkCallbackListener<Cha
             String openConversationId = message.getConversationId();
             try {
                 //发送机器人消息
-                String ret = messageHandler.Handler(message);
+                List<ToDoItem> ret = messageHandler.Handler(message);
                 if (ret != null) {
-                    robotGroupMessagesService.send(openConversationId, ret);
+                    robotGroupMessagesService.send(openConversationId, ret.toString());
                 }
             } catch (Exception e) {
                 log.error("send group message by robot error:" + e.getMessage(), e);

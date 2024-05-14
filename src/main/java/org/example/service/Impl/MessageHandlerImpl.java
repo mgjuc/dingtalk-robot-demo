@@ -14,7 +14,9 @@ import org.springframework.util.ObjectUtils;
 
 import javax.annotation.Resource;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -22,24 +24,23 @@ public class MessageHandlerImpl implements MessageHandler {
 
     @Resource
     private TodoItemRepository _repository;
-    public String Handler(ChatbotMessage message) {
+    public List<ToDoItem> Handler(ChatbotMessage message) {
+        List<ToDoItem> items = new ArrayList<>();
         MessageContent text = message.getText();
         String content = text.getContent();
         if (ObjectUtils.isEmpty(content)) {
             //do nothing
-            return null;
+            return items;
         }
-        if(content.trim().isEmpty()){
-            //todo 返回所有
-
-        }else if(content.trim().startsWith(Cmd.ADD)){
+        content = content.trim();
+        if(content.startsWith(Cmd.ADD)){
             //ADD
             ToDoItem toDoItem = new ToDoItem();
             String creater = message.getSenderNick();
             String reporter = message.getAtUsers().get(0).getStaffId();
             Date createTime = new Date(message.getCreateAt());
             String groups = message.getConversationTitle();
-            toDoItem.setContent(content.trim().substring(Cmd.ADD.length()));
+            toDoItem.setContent(content.substring(Cmd.ADD.length()));
             toDoItem.setMessage(JSON.toJSONString(message));
             toDoItem.setCreateTime(createTime);
             toDoItem.setUpdateTime(createTime);
@@ -48,14 +49,26 @@ public class MessageHandlerImpl implements MessageHandler {
             toDoItem.setRepoter(reporter);
             toDoItem.setOpenConversationId(message.getConversationId());
             _repository.save(toDoItem);
-
-        } else if(content.trim().startsWith(Cmd.ALL)){
-            //todo 返回所有
-            return null;
-        }else if(content.trim().startsWith(Cmd.DONE)){
-            //todo 完成
-            return null;
+        } else if(content.startsWith(Cmd.DONE)){
+            //完成
+            content = content.substring(Cmd.DONE.length()).trim();
+            String[] args = content.split(" ");
+            List<Long> ids = new ArrayList<>();
+            for (int i = 0; i < args.length; i++) {
+                if(ObjectUtils.isEmpty(args[i])) continue;
+                Long id = Long.parseLong(args[i]);
+                ids.add(id);
+            }
+            _repository.finishById((Long[]) ids.toArray());
         }
+/*        else if(content.startsWith(Cmd.ALL)){
+
+        }else if(content.isEmpty()){
+
+        }else{
+
+        }*/
+        items = _repository.findAll();
         SimpleDateFormat timeformatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String reportMan = message.getAtUsers().get(0).getStaffId(); //这个是加密后的
         String toSend = String.format("召唤者: %s %n" +
@@ -67,6 +80,6 @@ public class MessageHandlerImpl implements MessageHandler {
                 message.getConversationTitle(),
                 reportMan);
         log.info("send back: {}", toSend);
-        return toSend;
+        return items;
     }
 }
