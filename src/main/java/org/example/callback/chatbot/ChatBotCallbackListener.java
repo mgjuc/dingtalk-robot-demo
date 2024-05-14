@@ -11,6 +11,7 @@ import com.dingtalk.open.app.api.callback.OpenDingTalkCallbackListener;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ObjectUtils;
 
 import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
@@ -47,9 +48,10 @@ public class ChatBotCallbackListener implements OpenDingTalkCallbackListener<Cha
             String openConversationId = message.getConversationId();
             try {
                 //发送机器人消息
-                List<ToDoItem> ret = messageHandler.Handler(message);
-                if (ret != null) {
-                    robotGroupMessagesService.send(openConversationId, ret.toString());
+                List<ToDoItem> items = messageHandler.Handler(message);
+                if (!ObjectUtils.isEmpty(items)) {
+                    String output = FormateOutput(items);
+                    robotGroupMessagesService.send(openConversationId, output);
                 }
             } catch (Exception e) {
                 log.error("send group message by robot error:" + e.getMessage(), e);
@@ -58,5 +60,27 @@ public class ChatBotCallbackListener implements OpenDingTalkCallbackListener<Cha
             log.error("receive group message by robot error:" + e.getMessage(), e);
         }
         return new JSONObject();
+    }
+
+    /**
+     * 格式化打印输出
+     * @param items
+     * @return
+     */
+    private String FormateOutput(List<ToDoItem> items){
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+        if(items.isEmpty()){
+            return null;
+        }
+        StringBuilder stringBuilder = new StringBuilder();
+//        stringBuilder.append("|-----------------------------------------|\r\n");
+        stringBuilder.append(String.format("| %-4s | %-30s | %-4s |%n", "序号", "内容", "状态"));
+        for(ToDoItem it : items){
+            String content = it.getContent().length()> 30 ? it.getContent().substring(0, 30): it.getContent();
+            stringBuilder.append(String.format("| %-4s | %-30s | %-4s |%n", it.getId(), content, it.getState() == null ? "": it.getState()));
+        }
+//        stringBuilder.append("|-----------------------------------------|\r\n");
+        return stringBuilder.toString();
     }
 }

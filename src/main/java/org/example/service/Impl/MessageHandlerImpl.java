@@ -69,17 +69,6 @@ public class MessageHandlerImpl implements MessageHandler {
 
         }*/
         items = _repository.findAll();
-        SimpleDateFormat timeformatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        String reportMan = message.getAtUsers().get(0).getStaffId(); //这个是加密后的
-        String toSend = String.format("召唤者: %s %n" +
-                        "时间: %s %n" +
-                        "群组: %s %n" +
-                        "反馈人: %s %n",
-                message.getSenderNick(),
-                timeformatter.format(message.getCreateAt()),
-                message.getConversationTitle(),
-                reportMan);
-        log.info("send back: {}", toSend);
         return items;
     }
 }
