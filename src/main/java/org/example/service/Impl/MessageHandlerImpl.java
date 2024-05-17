@@ -9,6 +9,7 @@ import org.example.Repository.TodoItemRepository;
 import org.example.common.Constant.Cmd;
 import org.example.service.MessageHandler;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
@@ -59,7 +60,9 @@ public class MessageHandlerImpl implements MessageHandler {
                 Long id = Long.parseLong(args[i]);
                 ids.add(id);
             }
-            _repository.finishById((Long[]) ids.toArray());
+//            long[] arr = ids.stream().mapToLong(l -> l).toArray();
+            Long[] arr = ids.toArray(new Long[0]);
+            _repository.finishById(arr);
         }
 /*        else if(content.startsWith(Cmd.ALL)){
 
@@ -68,7 +71,7 @@ public class MessageHandlerImpl implements MessageHandler {
         }else{
 
         }*/
-        items = _repository.findAll();
+        items = _repository.findAllByOrderByIdAsc();
         return items;
     }
 }

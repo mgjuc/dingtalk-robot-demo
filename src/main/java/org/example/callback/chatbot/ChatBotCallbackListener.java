@@ -75,10 +75,10 @@ public class ChatBotCallbackListener implements OpenDingTalkCallbackListener<Cha
         }
         StringBuilder stringBuilder = new StringBuilder();
 //        stringBuilder.append("|-----------------------------------------|\r\n");
-        stringBuilder.append(String.format("| %-4s | %-30s | %-4s |%n", "序号", "内容", "状态"));
+//        stringBuilder.append(String.format("| %-4s | %-30s | %-4s |%n", "序号", "内容", "状态"));
         for(ToDoItem it : items){
             String content = it.getContent().length()> 30 ? it.getContent().substring(0, 30): it.getContent();
-            stringBuilder.append(String.format("| %-4s | %-30s | %-4s |%n", it.getId(), content, it.getState() == null ? "": it.getState()));
+            stringBuilder.append(String.format("%-4s | %-4s | %-30s %n", it.getId(), it.getState() == null ? "待办": it.getState(),content));
         }
 //        stringBuilder.append("|-----------------------------------------|\r\n");
         return stringBuilder.toString();
