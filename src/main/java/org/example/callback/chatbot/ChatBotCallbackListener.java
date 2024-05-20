@@ -14,8 +14,16 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static java.time.LocalDate.now;
 
 /**
  * 机器人消息回调
@@ -28,6 +36,7 @@ public class ChatBotCallbackListener implements OpenDingTalkCallbackListener<Cha
     private RobotGroupMessagesService robotGroupMessagesService;
 
     private MessageHandler messageHandler;
+
     @Autowired
     public ChatBotCallbackListener(RobotGroupMessagesService robotGroupMessagesService, MessageHandler messageHandler) {
         this.robotGroupMessagesService = robotGroupMessagesService;
@@ -64,23 +73,51 @@ public class ChatBotCallbackListener implements OpenDingTalkCallbackListener<Cha
 
     /**
      * 格式化打印输出
+     *
      * @param items
      * @return
      */
-    private String FormateOutput(List<ToDoItem> items){
+    private String FormateOutput(List<ToDoItem> items) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-        if(items.isEmpty()){
+        if (items.isEmpty()) {
             return null;
         }
+        List<ToDoItem> toDoItems = items.stream().filter(x -> ObjectUtils.isEmpty(x.getState())).collect(Collectors.toList());
+        items.removeAll(toDoItems);
         StringBuilder stringBuilder = new StringBuilder();
-//        stringBuilder.append("|-----------------------------------------|\r\n");
-//        stringBuilder.append(String.format("| %-4s | %-30s | %-4s |%n", "序号", "内容", "状态"));
-        for(ToDoItem it : items){
-            String content = it.getContent().length()> 30 ? it.getContent().substring(0, 30): it.getContent();
-            stringBuilder.append(String.format("%-4s | %-4s | %-30s %n", it.getId(), it.getState() == null ? "待办": it.getState(),content));
+        Date zeroClock = GetZeroClock(new Date());
+
+        boolean hasdoneToday = false;
+        if (!ObjectUtils.isEmpty(toDoItems)) {
+            stringBuilder.append("待完成任务\r\n");
+            for (ToDoItem item : toDoItems) {
+                String content = item.getContent().length() > 30 ? item.getContent().substring(0, 30) : item.getContent();
+                stringBuilder.append(String.format("%-4s | %-4s | %-30s %n", item.getId(), item.getState() == null ? "待办" : item.getState(), content));
+            }
         }
-//        stringBuilder.append("|-----------------------------------------|\r\n");
+        if (!ObjectUtils.isEmpty(items)) {
+            for (ToDoItem item : items) {
+                if (!GetZeroClock(item.getUpdateTime()).equals(zeroClock)) continue;
+                if(!hasdoneToday){
+                    hasdoneToday = true;
+                    stringBuilder.append("已完成任务\r\n");
+                }
+                String content = item.getContent().length() > 30 ? item.getContent().substring(0, 30) : item.getContent();
+                stringBuilder.append(String.format("%-4s | %-4s | %-30s %n", item.getId(), item.getState() == null ? "待办" : item.getState(), content));
+            }
+        }
+
         return stringBuilder.toString();
+    }
+
+    private Date GetZeroClock(Date current) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(current);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        return calendar.getTime();
     }
 }
